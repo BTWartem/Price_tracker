@@ -1,0 +1,13 @@
+Django==5.2
+celery[redis]==5.6.2
+redis==6.4.0
+django-celery-beat==2.8.1
+requests==2.32.3
+beautifulsoup4==4.13.3
+python-dotenv==1.1.0
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.10
+pillow==11.2.1
+
+# Для браузера
+playwright==1.41.1

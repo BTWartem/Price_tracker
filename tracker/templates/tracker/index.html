@@ -1,0 +1,110 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Главная - Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-75">
+    <div class="col-lg-6">
+        <h1 class="display-4 fw-bold">Отслеживай цены на любимые товары</h1>
+        <p class="lead text-secondary">
+            Добавляй товары с Wildberries, Ozon и AliExpress,
+            устанавливай желаемую цену и получай уведомления на email
+        </p>
+
+        {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-user-plus"></i> Начать отслеживание
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{% url 'add_product' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Добавить новый товар
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <div class="d-flex align-items-center text-secondary">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <span>Бесплатный сервис</span>
+                <i class="fas fa-check-circle text-success ms-4 me-2"></i>
+                <span>Мгновенные уведомления</span>
+                <i class="fas fa-check-circle text-success ms-4 me-2"></i>
+                <span>Графики изменения цен</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="text-center">
+            <i class="fas fa-chart-line text-primary" style="font-size: 300px; opacity: 0.8;"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Как это работает -->
+<div class="row mt-5">
+    <h2 class="text-center mb-4">Как это работает</h2>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <div class="display-1 text-primary mb-3">1</div>
+                <i class="fas fa-link fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Добавь ссылку</h5>
+                <p class="card-text">Вставь ссылку на товар с Wildberries, Ozon или AliExpress</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <div class="display-1 text-primary mb-3">2</div>
+                <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Укажи желаемую цену</h5>
+                <p class="card-text">Установи цену, при которой хочешь получить уведомление</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center p-3">
+            <div class="card-body">
+                <div class="display-1 text-primary mb-3">3</div>
+                <i class="fas fa-bell fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Получай уведомления</h5>
+                <p class="card-text">Когда цена упадет, мы пришлем письмо на твой email</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Поддерживаемые площадки -->
+<div class="row mt-5 bg-light p-5 rounded">
+    <h3 class="text-center mb-4">Поддерживаемые площадки</h3>
+    <div class="col-4 text-center">
+        <div class="p-3">
+            <i class="fas fa-shopping-cart fa-3x text-primary mb-2"></i>
+            <h5>Wildberries</h5>
+        </div>
+    </div>
+    <div class="col-4 text-center">
+        <div class="p-3">
+            <i class="fas fa-shopping-bag fa-3x text-primary mb-2"></i>
+            <h5>Ozon</h5>
+        </div>
+    </div>
+    <div class="col-4 text-center">
+        <div class="p-3">
+            <i class="fas fa-globe fa-3x text-primary mb-2"></i>
+            <h5>AliExpress</h5>
+        </div>
+    </div>
+</div>
+{% endblock %}

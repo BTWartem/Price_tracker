@@ -1,0 +1,82 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Решение капчи - Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h4><i class="fas fa-shield-alt"></i> Решение капчи для товара "{{ product.name }}"</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    В окне ниже отображается страница с капчей. Решите её, и данные будут автоматически загружены.
+                </div>
+
+                <div id="status" class="alert alert-secondary">
+                    ⏳ Подключение к браузеру...
+                </div>
+
+                <div id="browser-container" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; margin-bottom: 20px;">
+                    <img id="browser-screen" src="" style="width: 100%; display: none;">
+                </div>
+
+                <div class="text-center">
+                    <button id="solve-captcha" class="btn btn-success btn-lg" style="display: none;">
+                        <i class="fas fa-check"></i> Я решил капчу
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const productId = {{ product.id }};
+    const ws = new WebSocket('ws://localhost:8765');
+
+    ws.onopen = function() {
+        document.getElementById('status').innerHTML = '✅ Подключено к браузеру. Загружаем страницу...';
+        ws.send(JSON.stringify({
+            command: 'start_browser',
+            url: '{{ product.url }}'
+        }));
+    };
+
+    ws.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+
+        if (data.status === 'browser_started') {
+            document.getElementById('status').innerHTML = '✅ Браузер запущен. Загружаем страницу...';
+
+        } else if (data.status === 'waiting_captcha') {
+            document.getElementById('status').innerHTML = '🔄 ' + data.message;
+            document.getElementById('solve-captcha').style.display = 'inline-block';
+
+            // Запрашиваем скриншот каждые 2 секунды
+            setInterval(function() {
+                ws.send(JSON.stringify({command: 'get_screenshot'}));
+            }, 2000);
+
+        } else if (data.status === 'screenshot') {
+            // Обновляем изображение
+            const img = document.getElementById('browser-screen');
+            img.src = 'data:image/png;base64,' + data.data;
+            img.style.display = 'block';
+
+        } else if (data.status === 'success') {
+            document.getElementById('status').innerHTML = '✅ Капча решена! Данные получены.';
+            alert('Капча решена! Товар будет обновлен.');
+            window.location.href = '/profile/';
+        }
+    };
+
+    document.getElementById('solve-captcha').addEventListener('click', function() {
+        this.disabled = true;
+        document.getElementById('status').innerHTML = '⏳ Обработка...';
+        ws.send(JSON.stringify({command: 'captcha_solved'}));
+    });
+</script>
+{% endblock %}

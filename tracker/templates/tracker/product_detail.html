@@ -1,0 +1,231 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}{{ product.name }} - Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow sticky-top" style="top: 20px;">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="card-img-top p-3" alt="{{ product.name }}"
+                     style="max-height: 300px; object-fit: contain;"
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/300x300?text=No+Image';">
+            {% else %}
+                <div class="text-center p-5 bg-light">
+                    <i class="fas fa-image fa-5x text-secondary"></i>
+                </div>
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name|default:"Название не загружено" }}</h5>
+
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Площадка:</span>
+                        <strong>
+                            {% if product.platform == 'wb' %}
+                                Wildberries
+                            {% elif product.platform == 'ozon' %}
+                                Ozon
+                            {% elif product.platform == 'ali' %}
+                                AliExpress
+                            {% else %}
+                                Неизвестно
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Текущая цена:</span>
+                        <strong class="text-primary fs-4">
+                            {% if product.current_price %}
+                                {{ product.current_price|floatformat:2 }} ₽
+                            {% else %}
+                                <span class="text-secondary">Загружается...</span>
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Желаемая цена:</span>
+                        <strong class="text-success fs-5">{{ product.desired_price|floatformat:2 }} ₽</strong>
+                    </div>
+
+                    {% if product.current_price and product.current_price <= product.desired_price %}
+                        <div class="list-group-item bg-success text-white">
+                            <i class="fas fa-check-circle"></i> Цель достигнута!
+                        </div>
+                    {% endif %}
+
+                    <div class="list-group-item">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> Добавлен: {{ product.created_at|date:"d.m.Y H:i" }}
+                        </small>
+                    </div>
+
+                    <div class="list-group-item">
+                        <small class="text-muted">
+                            <i class="fas fa-sync"></i> Последняя проверка:
+                            {% if product.last_checked %}
+                                {{ product.last_checked|timesince }} назад
+                            {% else %}
+                                <span class="text-warning">Ожидает проверки</span>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{{ product.url }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt"></i> Перейти к товару
+                    </a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Назад к списку
+                    </a>
+                    <form method="post" action="{% url 'delete_product' product.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Удалить товар из отслеживания?')">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> История изменения цены</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="priceChart" style="height: 400px; width: 100%;"></canvas>
+
+                {% if not price_history %}
+                    <p class="text-center text-muted mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        История цен пока пуста. Данные появятся после первой автоматической проверки.
+                        <br>
+                        <small>Проверка происходит каждый час. Вы можете добавить товар и подождать.</small>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if price_history %}
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history"></i> Последние изменения</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Цена</th>
+                                <th>Изменение</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for history in price_history|slice:":10" %}
+                            <tr>
+                                <td>{{ history.created_at|date:"d.m.Y H:i" }}</td>
+                                <td class="fw-bold">{{ history.price|floatformat:2 }} ₽</td>
+                                <td>
+                                    {% if not forloop.last %}
+                                        {% with next_price=price_history|slice:forloop.counter|first %}
+                                            {% if next_price.price > history.price %}
+                                                <span class="text-success">
+                                                    <i class="fas fa-arrow-down"></i>
+                                                    {{ next_price.price|add:history.price|floatformat:2 }} ₽
+                                                </span>
+                                            {% elif next_price.price < history.price %}
+                                                <span class="text-danger">
+                                                    <i class="fas fa-arrow-up"></i>
+                                                    +{{ history.price|add:next_price.price|floatformat:2 }} ₽
+                                                </span>
+                                            {% else %}
+                                                <span class="text-secondary">=</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+
+    const dates = {{ dates_json|safe }};
+    const prices = {{ prices_json|safe }};
+
+    if (dates && dates.length > 0) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Цена (₽)',
+                    data: prices,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    fill: true,
+                    pointBackgroundColor: 'rgb(75, 192, 192)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toFixed(2) + ' ₽';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(2) + ' ₽';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Показываем сообщение, если нет данных
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#666";
+        ctx.textAlign = "center";
+        ctx.fillText("Нет данных для отображения", ctx.canvas.width/2, ctx.canvas.height/2);
+    }
+});
+</script>
+{% endblock %}

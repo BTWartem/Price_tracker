@@ -1,0 +1,61 @@
+{% extends 'tracker/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Добавить товар - Price Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Добавить новый товар</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Поддерживаемые площадки:</strong> Wildberries, Ozon, AliExpress
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Совет:</strong> Для точного отслеживания копируйте ссылку прямо из адресной строки браузера
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Сохранить и начать отслеживание
+                        </button>
+                        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Примеры ссылок -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-link"></i> Примеры ссылок</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <strong>Wildberries:</strong> https://www.wildberries.ru/catalog/12345678/detail.aspx
+                    </li>
+                    <li class="list-group-item">
+                        <strong>Ozon:</strong> https://www.ozon.ru/product/123456789/
+                    </li>
+                    <li class="list-group-item">
+                        <strong>AliExpress:</strong> https://aliexpress.ru/item/1234567890.html
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
