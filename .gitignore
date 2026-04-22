@@ -1,0 +1,34 @@
+# Виртуальное окружение
+venv/
+venv311/
+.venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# Локальные данные
+products_data/
+*.json
+!requirements.json
+coordinates.json
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+*.log
+
+# Большие файлы
+*.txt
+export.txt
+*.tar
+*.gz
